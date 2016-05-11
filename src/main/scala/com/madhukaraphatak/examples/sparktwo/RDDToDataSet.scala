@@ -4,7 +4,7 @@ import org.apache.spark.sql.types.{DoubleType, StringType, StructField, StructTy
 import org.apache.spark.sql.{Row, SparkSession}
 
 /**
-  * Created by madhu on 7/5/16.
+  * RDD API to Dataset API
   */
 object RDDToDataSet {
 
@@ -87,27 +87,18 @@ object RDDToDataSet {
     doubleDS.agg(sum("value")).show()
     doubleDS.agg(mean("value")).show()
 
+    //reduceByKey API
+    val reduceCountByRDD = wordsPair.reduceByKey(_+_)
+    val reduceCountByDs = wordsDs.groupByKey(value => value).mapGroups((key,values) =>(key,values.length))
+
+    println(reduceCountByRDD.collect().toList)
+    println(reduceCountByDs.collect().toList)
+
+    //reduce function
+    val rddReduce = doubleRDD.reduce((a,b) => a +b)
+    val dsReduce = doubleDS.reduce((row1,row2) =>Row(row1.getDouble(0) + row2.getDouble(0)))
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    println("rdd reduce is " +rddReduce +" dataset reduce "+dsReduce)
 
   }
 
