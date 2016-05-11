@@ -36,7 +36,8 @@ object RDDToDataSet {
 
     import sparkSession.implicits._
     val wordsDs = ds.flatMap(value => value.split("\\s+"))
-    val wordCountDs = wordsDs.groupByKey(value => value).count
+    val wordsPairDs = wordsDs.groupByKey(value => value)
+    val wordCountDs = wordsPairDs.count
     wordCountDs.show()
 
     //cache
@@ -89,7 +90,7 @@ object RDDToDataSet {
 
     //reduceByKey API
     val reduceCountByRDD = wordsPair.reduceByKey(_+_)
-    val reduceCountByDs = wordsDs.groupByKey(value => value).mapGroups((key,values) =>(key,values.length))
+    val reduceCountByDs = wordsPairDs.mapGroups((key,values) =>(key,values.length))
 
     println(reduceCountByRDD.collect().toList)
     println(reduceCountByDs.collect().toList)
