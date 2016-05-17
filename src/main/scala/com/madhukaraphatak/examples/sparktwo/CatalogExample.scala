@@ -17,7 +17,7 @@ object CatalogExample {
 
 
     val df = sparkSession.read.csv("src/main/resources/sales.csv")
-    df.registerTempTable("sales")
+    df.createTempView("sales")
 
     //interacting with catalogue
 
@@ -37,7 +37,7 @@ object CatalogExample {
     println(catalog.isCached("sales"))
 
     // drop the table
-    catalog.dropTempTable("sales")
+    catalog.dropTempView("sales")
     catalog.listTables().select("name").show()
 
     // list functions
