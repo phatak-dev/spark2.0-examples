@@ -16,10 +16,13 @@ object RDDToDataSet {
       .getOrCreate()
 
     val sparkContext = sparkSession.sparkContext
+    import sparkSession.implicits._
+
 
     //read data from text file
     val rdd = sparkContext.textFile("src/main/resources/data.txt")
-    val ds = sparkSession.read.text("src/main/resources/data.txt")
+    val ds = sparkSession.read.text("src/main/resources/data.txt").as[String]
+
 
     // do count
     println("count ")
@@ -34,7 +37,6 @@ object RDDToDataSet {
     val wordCount = wordsPair.reduceByKey(_+_)
     println(wordCount.collect.toList)
 
-    import sparkSession.implicits._
     val wordsDs = ds.flatMap(value => value.split("\\s+"))
     val wordsPairDs = wordsDs.groupByKey(value => value)
     val wordCountDs = wordsPairDs.count
