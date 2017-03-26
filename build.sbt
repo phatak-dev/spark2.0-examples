@@ -2,9 +2,9 @@ name := "SparkTwoExperiments"
 
 version := "1.0"
 
-scalaVersion := "2.10.4"
+scalaVersion := "2.11.8"
 
-val sparkVersion = "2.0.0-SNAPSHOT"
+val sparkVersion = "2.1.0"
 
 
 resolvers ++= Seq(
