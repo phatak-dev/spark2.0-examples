@@ -20,9 +20,9 @@ object SocketMiniBatchExample {
     //create stream from socket
 
     val socketStreamDf = sparkSession.readStream.
-                          format("socket")
-        .option("host","localhost")
-          .option("port",50050).load()
+      format("socket")
+      .option("host", "localhost")
+      .option("port", 50050).load()
 
     val query = socketStreamDf.writeStream.format("console").outputMode(OutputMode.Append()).trigger(
       Trigger.ProcessingTime(10, TimeUnit.SECONDS)
