@@ -1,0 +1,8 @@
+* Recoverable State
+* Using Window API
+    * Process Time
+    * Event Time
+* Custom Trigger - Sessionisation
+* Different kind of sinks
+* Kafka integration ( with offset)
+* Writing custom sources
