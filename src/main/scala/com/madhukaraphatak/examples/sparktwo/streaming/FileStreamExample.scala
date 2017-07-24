@@ -33,9 +33,8 @@ object FileStreamExample {
     val query = fileStreamDf.writeStream
       .format("console")
       .outputMode(OutputMode.Append())
-      .start()
-
-    query.awaitTermination()
+      .query
+      .awaitTermination()
   }
 
 }
