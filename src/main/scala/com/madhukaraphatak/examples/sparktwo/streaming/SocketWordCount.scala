@@ -1,15 +1,14 @@
 package com.madhukaraphatak.examples.sparktwo.streaming
 
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.streaming.OutputMode
-import org.apache.spark.sql.{SaveMode, SparkSession}
 
 /**
   * Created by madhu on 24/07/17.
   */
-object SocketReadExample {
+object SocketWordCount {
 
   def main(args: Array[String]): Unit = {
-
     val sparkSession = SparkSession.builder
       .master("local")
       .appName("example")
@@ -23,14 +22,13 @@ object SocketReadExample {
       .option("port", 50050)
       .load()
 
-    val consoleDataFrameWriter = socketStreamDf.writeStream
-      .format("console")
-      .outputMode(OutputMode.Append())
+    import sparkSession.implicits._
+    val wordsDf = socketStreamDf.as[String].flatMap(value => value.split(" "))
+    val countDf = wordsDf.groupBy("value").count()
 
-    val query = consoleDataFrameWriter.start()
+    val query =
+      countDf.writeStream.format("console").outputMode(OutputMode.Complete())
 
-    query.awaitTermination()
-
- }
-
+    query.start().awaitTermination()
+  }
 }
