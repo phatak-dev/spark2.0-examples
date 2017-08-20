@@ -1,5 +1,4 @@
-package com.madhukaraphatak.examples.sparktwo.BEYOND UNIT TESTS: DEPLOYMENT AND TESTING FOR HADOOP/SPARK WORKFLOWS by Anant Nag from Linkedin
-
+package com.madhukaraphatak.examples.sparktwo
 import java.sql.Timestamp
 
 import org.apache.spark.sql.SparkSession
