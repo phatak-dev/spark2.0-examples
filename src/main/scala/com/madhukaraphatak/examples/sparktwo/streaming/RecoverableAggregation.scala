@@ -33,7 +33,7 @@ object RecoverableAggregation {
     val query =
       countDs.writeStream
         .format("console")
-        .option("checkPoint", "/tmp/checkpoint")
+        .option("checkpointLocation", "/tmp/checkpoint")
         .outputMode(OutputMode.Complete())
 
     query.start().awaitTermination()
