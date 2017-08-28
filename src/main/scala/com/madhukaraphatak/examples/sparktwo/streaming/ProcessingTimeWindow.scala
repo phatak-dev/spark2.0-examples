@@ -6,7 +6,7 @@ import org.apache.spark.sql.functions._
 
 import org.apache.spark.sql.streaming.OutputMode
 
-object ProcessingTimeTumblingWindow {
+object ProcessingTimeWindow {
 
   def main(args: Array[String]): Unit = {
     val sparkSession = SparkSession.builder
