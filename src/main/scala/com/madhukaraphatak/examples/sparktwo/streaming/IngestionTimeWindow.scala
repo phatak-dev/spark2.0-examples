@@ -1,12 +1,12 @@
-package com.madhukaraphatak.examples.sparktwo
+package com.madhukaraphatak.examples.sparktwo.streaming
+
 import java.sql.Timestamp
 
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
-
 import org.apache.spark.sql.streaming.OutputMode
 
-object ProcessingTimeWindow {
+object IngestionTimeWindow {
 
   def main(args: Array[String]): Unit = {
     val sparkSession = SparkSession.builder
@@ -19,10 +19,10 @@ object ProcessingTimeWindow {
       .format("socket")
       .option("host", "localhost")
       .option("port", 50050)
+      .option("includeTimestamp", true)
       .load()
-    val currentTimeDf = socketStreamDf.withColumn("processingTime",current_timestamp())
     import sparkSession.implicits._
-    val socketDs = currentTimeDf.as[(String, Timestamp)]
+    val socketDs = socketStreamDf.as[(String, Timestamp)]
     val wordsDs = socketDs
       .flatMap(line => line._1.split(" ").map(word => (word, line._2)))
       .toDF("word", "timestamp")
@@ -37,7 +37,6 @@ object ProcessingTimeWindow {
     val query =
       windowedCount.writeStream
         .format("console")
-        .option("truncate","false")
         .outputMode(OutputMode.Complete())
 
     query.start().awaitTermination()
