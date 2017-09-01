@@ -1,4 +1,4 @@
-package com.madhukaraphatak.examples.sparktwo
+package com.madhukaraphatak.examples.sparktwo.streaming
 import java.sql.Timestamp
 
 import org.apache.spark.sql.SparkSession
@@ -25,11 +25,11 @@ object ProcessingTimeWindow {
     val socketDs = currentTimeDf.as[(String, Timestamp)]
     val wordsDs = socketDs
       .flatMap(line => line._1.split(" ").map(word => (word, line._2)))
-      .toDF("word", "timestamp")
+      .toDF("word", "processingTime")
 
     val windowedCount = wordsDs
       .groupBy(
-        window($"timestamp", "15 seconds")
+        window($"processingTime", "15 seconds")
       )
       .count()
       .orderBy("window")
