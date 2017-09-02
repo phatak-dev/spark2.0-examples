@@ -25,7 +25,10 @@ object SocketWordCount {
     import sparkSession.implicits._
     val socketDs = socketStreamDf.as[String]
     val wordsDs =  socketDs.flatMap(value => value.split(" "))
-    val countDs = wordsDs.groupBy("value").count()
+   
+    import org.apache.spark.sql.functions.count
+   
+    val countDs = wordsDs.groupBy("value").agg(count("value").as("count"))
 
     val query =
       countDs.writeStream.format("console").outputMode(OutputMode.Complete())
