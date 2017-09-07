@@ -24,21 +24,26 @@ object IngestionTimeWindow {
     import sparkSession.implicits._
     val socketDs = socketStreamDf.as[(String, Timestamp)]
     val wordsDs = socketDs
-      .flatMap(line => line._1.split(" ").map(word => (word, line._2)))
+      .flatMap(line => line._1.split(" ").map(word => {
+         Thread.sleep(15000)
+        (word, line._2)
+      }))
       .toDF("word", "timestamp")
 
     val windowedCount = wordsDs
       .groupBy(
         window($"timestamp", "15 seconds")
       )
-      .count()
+        .count()
       .orderBy("window")
+
 
     val query =
       windowedCount.writeStream
-        .format("console")
-        .outputMode(OutputMode.Complete())
+        .format("console").option("truncate","false")
+        .outputMode(OutputMode.Complete()).start()
 
-    query.start().awaitTermination()
+
+    query.awaitTermination()
   }
 }
