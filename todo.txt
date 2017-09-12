@@ -2,7 +2,7 @@
 * Using Window API
     * Process Time
     * Event Time
-* Custom Trigger - Sessionisation
+* Custom Trigger - Sensitisation
 * Different kind of sinks
 * Kafka integration ( with offset)
 * Writing custom sources

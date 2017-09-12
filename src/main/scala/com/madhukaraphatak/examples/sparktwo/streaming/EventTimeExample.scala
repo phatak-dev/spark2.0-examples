@@ -37,6 +37,8 @@ object EventTimeExample {
         window($"time", "10 seconds")
       )
       .sum("value")
+
+
     val query =
       windowedCount.writeStream
         .format("console")
