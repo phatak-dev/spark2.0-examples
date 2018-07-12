@@ -43,6 +43,8 @@ object DataSourceV2Example {
 
     //write examples
     simpleMysqlDf.write.format("com.madhukaraphatak.examples.sparktwo.datasourcev2.simplemysqlwriter").save()
+    simpleMysqlDf.write.format("com.madhukaraphatak.examples.sparktwo.datasourcev2.mysqlwithtransaction").save()
+
 
 
     sparkSession.stop()
