@@ -10,12 +10,14 @@ object SparkSessionExample {
 
   def main(args: Array[String]) {
 
-    val sparkSession = SparkSession.builder.
-      master("local")
+    val sparkSession = SparkSession.builder
+      .master("local")
       .appName("spark session example")
       .getOrCreate()
 
-    val df = sparkSession.read.option("header","true").csv("src/main/resources/sales.csv")
+    val df = sparkSession.read
+      .option("header", "true")
+      .csv("src/main/resources/sales.csv")
 
     df.show()
 
