@@ -4,8 +4,10 @@ import org.apache.spark.sql.sources.v2._
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.sources.v2.reader._
+
 import scala.collection.JavaConverters._
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.sources._
 
 class DefaultSource extends DataSourceV2 with ReadSupport {
@@ -32,26 +34,26 @@ class SimpleMysqlDataSourceReader()
     pushedFilters
   }
 
-  def createDataReaderFactories = {
+  def planInputPartitions = {
     val sparkContext = SparkSession.builder.getOrCreate().sparkContext
 
-    val factoryList = new java.util.ArrayList[DataReaderFactory[Row]]
-    factoryList.add(new SimpleMysqlDataSourceReaderFactory(pushedFilters))
+    val factoryList = new java.util.ArrayList[InputPartition[InternalRow]]
+    factoryList.add(new SimpleMysqlInputPartition(pushedFilters))
     factoryList
   }
 
 }
 
-class SimpleMysqlDataSourceReaderFactory(pushedFilters: Array[Filter])
-    extends DataReaderFactory[Row] {
+class SimpleMysqlInputPartition(pushedFilters: Array[Filter])
+    extends InputPartition[InternalRow] {
 
-  def createDataReader = new SimpleMysqlDataReader(pushedFilters: Array[Filter])
+  def createPartitionReader = new SimpleMysqlInputPartitionReader(pushedFilters: Array[Filter])
 }
 
-class SimpleMysqlDataReader(pushedFilters: Array[Filter])
-    extends DataReader[Row] {
+class SimpleMysqlInputPartitionReader(pushedFilters: Array[Filter])
+    extends InputPartitionReader[InternalRow] {
 
-  var iterator: Iterator[Row] = null
+  var customIterator: Iterator[Row] = null
 
   val getQuery: String = {
     if (pushedFilters == null || pushedFilters.isEmpty)
@@ -67,7 +69,7 @@ class SimpleMysqlDataReader(pushedFilters: Array[Filter])
   }
 
   def next = {
-    if (iterator == null) {
+    if (customIterator == null) {
       val url = "jdbc:mysql://localhost/mysql"
       val user = "root"
       val password = "abc123"
@@ -80,13 +82,13 @@ class SimpleMysqlDataReader(pushedFilters: Array[Filter])
       val df = sparkSession.read.jdbc(url, getQuery, properties)
       val rdd = df.rdd
       val partition = rdd.partitions(0)
-      iterator = rdd.iterator(partition, org.apache.spark.TaskContext.get())
+      customIterator = rdd.iterator(partition, org.apache.spark.TaskContext.get())
     }
-    iterator.hasNext
+    customIterator.hasNext
   }
 
   def get = {
-    iterator.next()
+    InternalRow(customIterator.next().toSeq)
   }
   def close() = Unit
 }

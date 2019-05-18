@@ -1,11 +1,15 @@
 package com.madhukaraphatak.examples.sparktwo.datasourcev2.simplecsv
 
+import org.apache.orc.DataReader
 import org.apache.spark.sql.sources.v2._
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.sources.v2.reader._
+
 import scala.collection.JavaConverters._
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.unsafe.types.UTF8String
 
 class DefaultSource extends DataSourceV2 with ReadSupport {
 
@@ -17,7 +21,7 @@ class DefaultSource extends DataSourceV2 with ReadSupport {
 
 class SimpleCsvDataSourceReader(path: String) extends DataSourceReader {
 
-  def readSchema() = {
+  override def readSchema() = {
     val sparkContext = SparkSession.builder.getOrCreate().sparkContext
     val firstLine = sparkContext.textFile(path).first()
     val columnNames = firstLine.split(",")
@@ -25,24 +29,27 @@ class SimpleCsvDataSourceReader(path: String) extends DataSourceReader {
     StructType(structFields)
   }
 
-  def createDataReaderFactories = {
+  override def planInputPartitions = {
     val sparkContext = SparkSession.builder.getOrCreate().sparkContext
     val rdd = sparkContext.textFile(path)
 
-    val factoryList = new java.util.ArrayList[DataReaderFactory[Row]]
+    val factoryList = new java.util.ArrayList[InputPartition[InternalRow]]
     (0 to rdd.getNumPartitions - 1).foreach(value ⇒
-      factoryList.add(new SimpleCsvDataSourceReaderFactory(value, path)))
+      factoryList.add(new SimpleInputPartition(value, path)))
     factoryList
   }
 
 }
 
-class SimpleCsvDataSourceReaderFactory(partitionNumber: Int, filePath: String, hasHeader: Boolean = true) extends DataReaderFactory[Row] {
+class SimpleInputPartition(partitionNumber: Int, filePath: String, hasHeader: Boolean = true)
+     extends InputPartition[InternalRow] {
 
-  def createDataReader = new SimpleCsvDataReader(partitionNumber, filePath, hasHeader)
+  override def createPartitionReader(): InputPartitionReader[InternalRow] =
+    new SimpleInputPartitionReader(partitionNumber,filePath,hasHeader)
 }
 
-class SimpleCsvDataReader(partitionNumber: Int, filePath: String, hasHeader: Boolean = true) extends DataReader[Row] {
+class SimpleInputPartitionReader(partitionNumber: Int, filePath: String, hasHeader: Boolean = true)
+  extends InputPartitionReader[InternalRow] {
 
   var iterator: Iterator[String] = null
 
@@ -65,7 +72,7 @@ class SimpleCsvDataReader(partitionNumber: Int, filePath: String, hasHeader: Boo
   def get = {
     println("calling get")
     val line = iterator.next()
-    Row.fromSeq(line.split(","))
+    InternalRow.fromSeq(line.split(",").map(value => UTF8String.fromString(value)))
   }
   def close() = Unit
 }

@@ -4,12 +4,16 @@ import org.apache.spark.sql.sources.v2._
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.sources.v2.writer._
+
 import scala.collection.JavaConverters._
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.sources._
 import java.util.Optional
+
 import org.apache.spark.sql.SaveMode
-import java.sql.{Connection,DriverManager}
+import java.sql.{Connection, DriverManager}
+
+import org.apache.spark.sql.catalyst.InternalRow
 
 class DefaultSource extends DataSourceV2 with WriteSupport {
 
@@ -22,7 +26,7 @@ class DefaultSource extends DataSourceV2 with WriteSupport {
 
 class MysqlDataSourceWriter extends DataSourceWriter {
 
-  override def createWriterFactory(): DataWriterFactory[Row] = {
+  override def createWriterFactory(): DataWriterFactory[InternalRow] = {
     new MysqlDataWriterFactory()
   }
 
@@ -36,13 +40,13 @@ class MysqlDataSourceWriter extends DataSourceWriter {
 
 }
 
-class MysqlDataWriterFactory extends DataWriterFactory[Row] {
-  override def createDataWriter(partitionId: Int, attemptNumber: Int): DataWriter[Row] = {
+class MysqlDataWriterFactory extends DataWriterFactory[InternalRow] {
+  override def createDataWriter(partitionId: Int, taskId:Long,epochId: Long): DataWriter[InternalRow] = {
     new MysqlDataWriter()
   }
 }
 
-class MysqlDataWriter extends DataWriter[Row] {
+class MysqlDataWriter extends DataWriter[InternalRow] {
 
   val url = "jdbc:mysql://localhost/test"
   val user = "root"
@@ -54,7 +58,7 @@ class MysqlDataWriter extends DataWriter[Row] {
   val preparedStatement = connection.prepareStatement(statement)
 
 
-  def write(record: Row) = {
+  def write(record: InternalRow) = {
    val value = record.getString(0)
    preparedStatement.setString(1,value)
    preparedStatement.executeUpdate()

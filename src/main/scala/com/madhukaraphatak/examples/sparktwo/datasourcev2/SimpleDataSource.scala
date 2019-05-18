@@ -1,10 +1,10 @@
 package com.madhukaraphatak.examples.sparktwo.datasourcev2.simple
 
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.sources.v2._
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.types._
 import org.apache.spark.sql.sources.v2.reader._
-import scala.collection.JavaConverters._
+import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 
 class DefaultSource extends DataSourceV2 with ReadSupport {
 
@@ -14,18 +14,19 @@ class DefaultSource extends DataSourceV2 with ReadSupport {
 
 class SimpleDataSourceReader extends DataSourceReader {
 
-  def readSchema() = StructType(Array(StructField("value", StringType)))
+  override def readSchema() = StructType(Array(StructField("value", StringType)))
 
-  def createDataReaderFactories = {
-    val factoryList = new java.util.ArrayList[DataReaderFactory[Row]]
-    factoryList.add(new SimpleDataSourceReaderFactory())
+  override def planInputPartitions = {
+    val factoryList = new java.util.ArrayList[InputPartition[InternalRow]]
+    factoryList.add(new SimpleInputPartitionReader())
     factoryList
   }
 
 }
 
-class SimpleDataSourceReaderFactory extends DataReaderFactory[Row] with DataReader[Row] {
-  def createDataReader = new SimpleDataSourceReaderFactory()
+class SimpleInputPartitionReader extends InputPartition[InternalRow] with InputPartitionReader[InternalRow] {
+
+  override def createPartitionReader(): InputPartitionReader[InternalRow] = new SimpleInputPartitionReader
 
   val values = Array("1", "2", "3", "4", "5")
 
@@ -34,11 +35,15 @@ class SimpleDataSourceReaderFactory extends DataReaderFactory[Row] with DataRead
   def next = index < values.length
 
   def get = {
-    val row = Row(values(index))
+    val stringValue = values(index)
+    val stringUtf = UTF8String.fromString(stringValue)
+    val row = InternalRow(stringUtf)
     index = index + 1
     row
   }
 
   def close() = Unit
+
+
 }
 
