@@ -1,7 +1,7 @@
 package com.madhukaraphatak.examples.sparktwo.ml
 
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.feature.{OneHotEncoderEstimator, StringIndexer}
+import org.apache.spark.ml.feature.{OneHotEncoder, OneHotEncoderEstimator, StringIndexer}
 import org.apache.spark.sql.SparkSession
 
 object MultiColumnTransformation {
@@ -26,6 +26,21 @@ object MultiColumnTransformation {
       indexer.setOutputCol(column + "_index")
     })
 
+    // serial transformations
+    val singleColumnOneHotEncoders = stringColumns.map(column => {
+      val oneHotEncoder = new OneHotEncoder()
+      oneHotEncoder.setInputCol(column+"_index")
+      oneHotEncoder.setOutputCol(column+"_onehot")
+      oneHotEncoder
+    })
+
+    val serialPipeLine = new Pipeline()
+    serialPipeLine.setStages(indexers ++ singleColumnOneHotEncoders)
+    val serialOutput = serialPipeLine.fit(salaryDf).transform(salaryDf)
+    serialOutput.show()
+
+    // multi column transformations
+
     val singleOneHotEncoder = new OneHotEncoderEstimator()
     singleOneHotEncoder.setInputCols(stringColumns.map(_ + "_index"))
     singleOneHotEncoder.setOutputCols(outputColumns)
@@ -33,9 +48,8 @@ object MultiColumnTransformation {
     val pipeline = new Pipeline()
     pipeline.setStages(indexers ++ Array(singleOneHotEncoder))
 
-    val outputDf = pipeline.fit(salaryDf).transform(salaryDf)
+    pipeline.fit(salaryDf)
 
-    outputDf.select(outputColumns.head, outputColumns.tail: _*).show()
 
   }
 }
