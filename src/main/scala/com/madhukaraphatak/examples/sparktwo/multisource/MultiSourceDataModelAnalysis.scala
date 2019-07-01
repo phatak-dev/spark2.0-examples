@@ -1,0 +1,38 @@
+package com.madhukaraphatak.examples.sparktwo.multisource
+
+import com.madhukaraphatak.examples.sparktwo.multisource.MultiSourceLoad.loadData
+import org.apache.spark.sql.SparkSession
+
+object MultiSourceDataModelAnalysis {
+  def main(args: Array[String]): Unit = {
+
+
+    val url = args(0)
+    val user = args(1)
+    val password = args(2)
+
+    val sparkSession = SparkSession.builder.
+      master("local[*]")
+      .appName("example")
+      .getOrCreate()
+
+    val (transactionDf, demographicsDf, marketingDf, creditDeptDf) = loadData(sparkSession, url, user, password)
+
+    val dataModel = transactionDf.
+      join(demographicsDf,Seq("customer_id"))
+      .join(marketingDf,Seq("customer_id","transaction_id"))
+      .join(creditDeptDf, "customer_id")
+
+    //dataModel.cache()
+
+    dataModel.createOrReplaceTempView("datamodel")
+    //number of  sales by source
+    dataModel.groupBy("source").count().show()
+
+    // average revenue by City and Department
+
+    sparkSession.sql("select sum(revenue), avg(cost) from datamodel group by city, department").show()
+
+
+  }
+}
