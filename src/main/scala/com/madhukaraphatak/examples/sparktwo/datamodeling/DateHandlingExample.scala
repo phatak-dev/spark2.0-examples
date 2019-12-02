@@ -1,7 +1,7 @@
 package com.madhukaraphatak.examples.sparktwo.datamodeling
 
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.types.{StructField, StructType}
 
 object DateHandlingExample {
 
@@ -66,6 +66,26 @@ object DateHandlingExample {
     joinedDF.groupBy("year","quarter").
       avg("Close").
       sort("year","quarter")
+      .show()
+
+
+    //handling multiple dates
+
+    val appleStockDfWithIssueDate = appleStockDf.
+      withColumn("issue_date",add_months(appleStockDf("Date"),-12))
+
+    val issueDateSchema = StructType(dateDf.schema.fields.map(value => value.copy(name = "issue_"+value.name)))
+    val issueDf = sparkSession.createDataFrame(dateDf.rdd, issueDateSchema)
+
+    //join with date columns
+    val twoJoinDf = appleStockDfWithIssueDate.join(dateDf, appleStockDfWithIssueDate.col("Date") ===
+      dateDf.col("full_date_formatted"))
+      .join(issueDf, appleStockDfWithIssueDate.col("issue_date") === issueDf.col("issue_full_date_formatted"))
+
+    //get quaterly max price by issue date
+    twoJoinDf.groupBy("issue_year","issue_quarter").
+      avg("Close").
+      sort("issue_year","issue_quarter")
       .show()
 
 
